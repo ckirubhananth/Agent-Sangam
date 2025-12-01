@@ -8,12 +8,16 @@ Run this after starting the server:
 import httpx
 import json
 import logging
+import os
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-BASE_URL = "http://127.0.0.1:8000"
+# Use environment variable or default to port 8000
+PORT = os.getenv("PORT", "8000")
+HOST = os.getenv("HOST", "127.0.0.1")
+BASE_URL = f"http://{HOST}:{PORT}"
 
 def test_tool_registry():
     """Test that tool registry endpoint works."""

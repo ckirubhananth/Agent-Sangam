@@ -6,6 +6,7 @@ enabling automatic documentation, client generation, and tool discovery.
 """
 
 import json
+import os
 from typing import Any, Dict, List, Optional
 from tools.agent_tools import (
     PDFSearchTool, PDFEntityExtractorTool, 
@@ -274,7 +275,7 @@ class OpenAPISchemaGenerator:
             },
             "servers": [
                 {
-                    "url": "http://localhost:8000",
+                    "url": f"http://localhost:{os.getenv('PORT', '8000')}",
                     "description": "Local development server"
                 },
                 {
