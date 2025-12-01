@@ -175,6 +175,14 @@ async def process_pdf_background(task_id: str, file_path: str, pdf_session_id: s
         background_tasks[task_id]["completed_at"] = datetime.utcnow().isoformat()
         logger.info(f"[Background Task {task_id}] PDF processing completed successfully")
 
+        # Clean up: Delete the PDF file after successful processing
+        try:
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logger.info(f"[Background Task {task_id}] Deleted PDF file: {file_path}")
+        except Exception as cleanup_error:
+            logger.warning(f"[Background Task {task_id}] Failed to delete PDF file: {cleanup_error}")
+
     except Exception as e:
         logger.error(f"[Background Task {task_id}] Failed: {str(e)}", exc_info=True)
         background_tasks[task_id]["status"] = "failed"
