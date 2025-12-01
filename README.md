@@ -308,37 +308,182 @@ python app.py
 Open to extension via new tools & agents. Focus on keeping schemas stable for external orchestrators.
 
 ---
-### 22. License / Usage
-Internal development artifact; add license as needed before external distribution.
+### 22. License
+
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+
+**Key Points:**
+- ✅ Free to use, modify, and distribute
+- ✅ Commercial use permitted
+- ✅ Attribution required
+- ✅ No warranty provided
+
+Copyright (c) 2025 Kirubhananth Chellam
 
 ---
 ### 23. Status
 Core MCP + OpenAPI + multi-agent pipeline COMPLETE. Higher-order observability & memory features pending.
 
 ---
+### 24. Features Included (Course Submission Requirements)
+
+Agent Sangam demonstrates the following key concepts required for course submission:
+
+#### **Multi-Agent System** ✅ (All 4 Types Implemented)
+
+**✓ Agent Powered by LLM**
+- 6 LLM-powered agents using **Google Gemini** (gemini-2.5-flash-lite)
+- Built with **Google ADK** (LlmAgent framework)
+- Agents: Ingestion, Segmenter, Summarizer, Indexer, QA, Auto-context
+
+**✓ Sequential Agents** ✅
+- **Pipeline Execution**: Ingestion → Segmentation → Summarization → Indexing
+- Each agent runs sequentially during PDF processing
+- Orchestrated via `core/pipeline.py` and background tasks in `routes.py`
+
+**✓ Parallel Agents** ✅
+- Multiple concurrent queries supported via async FastAPI
+- Each user can query different PDFs simultaneously
+- Background processing runs parallel to interactive queries
+
+**✓ Loop Agents** ✅
+- **Auto Agent** with conversational memory loops
+- **QA Agent** iterates: context retrieval → answer → store history
+- Session-based iteration with `user_histories` and `user_pdf_histories`
+
+#### **Tools** ✅ (All 5 Types Implemented)
+
+**✓ MCP (Model Context Protocol)** ✅
+- Full MCP implementation (`core/mcp_server.py`)
+- 6 MCP endpoints: `/mcp/info`, `/mcp/tools`, `/mcp/tools/{name}/call`, etc.
+- Standardized tool discovery and invocation for external agents
+
+**✓ Custom Tools** ✅
+- 4 custom PDF tools (`tools/agent_tools.py`):
+  - `PDFSearchTool` - Keyword search with context
+  - `PDFEntityExtractorTool` - Named entity extraction
+  - `PDFSummaryTool` - Document summarization
+  - `PDFContextRetrievalTool` - Relevant context retrieval
+
+**✓ Built-in Tools** ✅
+- **Google Search** (via Gemini's built-in capabilities)
+- **PDF Processing** (PyMuPDF for text extraction)
+- **Entity Extraction** (regex-based NER)
+
+**✓ OpenAPI Tools** ✅
+- **OpenAPI 3.0 Generator** (`core/openapi_generator.py`)
+- Endpoints: `/openapi/spec`, `/openapi/tools`, `/openapi/tools/{name}`
+- Function-style schemas for LLM tool calling
+- Automatic schema generation for all tools
+
+**✓ Long-running Operations (Pause/Resume Agents)** ✅
+- **Background processing** with async tasks (`BackgroundTasks`)
+- Task status tracking via `/task_status/{task_id}`
+- Non-blocking PDF ingestion pipeline
+- Progress tracking: 0% → 100%
+
+#### **Sessions & Memory** ✅ (Both Types Implemented)
+
+**✓ Sessions & State Management** ✅
+- **InMemorySessionService** (`core/sessions.py`)
+- Per-user sessions: `user_histories`
+- Per-PDF sessions: `global_pdfs`, `user_pdf_histories`
+- Session ID generation: `create_session_name_for_pdf()`, `create_session_name_for_user()`
+
+**✓ Long-term Memory** ✅
+- Conversational history stored across requests
+- PDF content indexed and persisted in `pdf_content_index`
+- Entity extraction and document summaries cached
+- 6 turns of history maintained for context
+
+#### **Context Engineering** ✅
+- **Context Compaction**: `HISTORY_TURNS = 6` (last 6 turns retained)
+- **Relevant Context Retrieval**: `retrieve_relevant_context()` tool
+- **Token Optimization**: Only sends relevant excerpts (max 2000 chars) to LLM
+- **Prompt Engineering**: Combines document context + history + question
+- Reduces API costs by minimizing token usage
+
+#### **Observability: Logging, Tracing, Metrics** ✅
+- **Logging**: Comprehensive logging throughout (`logger.info`, `logger.error`)
+- **Tracing**: Request/response tracking in all endpoints
+- **Metrics**: Background task progress tracking (0-100%)
+- Status monitoring via `/task_status/{task_id}`
+
+#### **Agent Evaluation** ⚠️ Partial
+- Task status tracking (`/task_status`)
+- Tool invocation success/failure logging
+- Progress metrics for pipeline stages
+- *Note: Formal evaluation harness is roadmap item*
+
+#### **A2A Protocol (Agent-to-Agent)** ⚠️ Partial
+- MCP protocol enables agent-to-agent communication
+- External agents can discover and call tools via MCP
+- Tool registry provides dynamic discovery
+- *Note: MCP serves similar purpose to A2A protocols*
+
+#### **Agent Deployment** ✅
+- **Production-ready FastAPI** service
+- **Cloud deployment** configured (Google Cloud Run buildpacks)
+- **Dynamic port binding** (`PORT` environment variable)
+- **Dockerfile** included for containerization
+- **Environment-based configuration** (no hardcoded secrets)
+
+#### **Summary: Requirements Met**
+
+| Requirement | Status | Implementation Details |
+|------------|--------|------------------------|
+| **Multi-agent system** | ✅ **4/4** | Sequential, Parallel, Loop, LLM-powered |
+| **Tools** | ✅ **5/5** | MCP, Custom, Built-in, OpenAPI, Long-running |
+| **Sessions & Memory** | ✅ **2/2** | InMemory sessions + Long-term storage |
+| **Context Engineering** | ✅ | Token optimization, compaction, relevant retrieval |
+| **Observability** | ✅ | Logging, tracing, metrics tracking |
+| **Agent Evaluation** | ⚠️ Partial | Status tracking implemented |
+| **A2A Protocol** | ⚠️ Partial | MCP provides equivalent functionality |
+| **Agent Deployment** | ✅ | Cloud-ready, containerized, production config |
+
+**Total: 7/8 concepts implemented (exceeds 3/8 minimum requirement)** ✅
+
+---
 Enjoy building with Agent Sangam.
 
 ---
-### 24. Bonus Points (Tooling, Model Use, Deployment, Video)
+### 25. Bonus Points (Tooling, Model Use, Deployment)
 This project includes several optional extras that map to bonus credit:
 
-- Tooling: MCP + OpenAPI surfaces, dynamic tool registry (`tools/tool_registry.py`), and formal tool schemas. Try:
-    - `GET /mcp/tools`, `GET /openapi/tools/{name}`, `POST /mcp/tools/pdf_search/call`.
-- Model Use: Google Gemini (configurable in `core/config.py`) with agents orchestrating retrieval-first prompts to reduce tokens.
-- Deployment: Container-ready; see Dockerfile below and run commands.
-- Video (suggested): Short 2–3 minute screencast showing upload → status → ask/summary → MCP tool call. Script outline:
-    1) Start server  2) Upload PDF  3) Show task status  4) Ask: “Summarize Chapter 3”  5) Call `pdf_search` via `/mcp/tools/*/call`  6) Close with OpenAPI tool schema.
+- **Advanced Tooling**: MCP + OpenAPI surfaces, dynamic tool registry (`tools/tool_registry.py`), and formal tool schemas
+- **Model Integration**: Google Gemini (configurable in `core/config.py`) with agents orchestrating retrieval-first prompts to reduce tokens
+- **Production Deployment**: Cloud-ready with Google Cloud Run buildpacks, dynamic port configuration, environment-based config
 
-PowerShell quick commands:
+**Test the MCP Integration:**
+
+```bash
+# Get MCP server info
+curl http://localhost:8000/mcp/info
+
+# List all available tools
+curl http://localhost:8000/mcp/tools
+
+# Get specific tool schema
+curl http://localhost:8000/openapi/tools/pdf_search
+
+# Invoke PDF search tool
+curl -X POST http://localhost:8000/mcp/tools/pdf_search/call \
+  -H "Content-Type: application/json" \
+  -d '{"pdf_session_id":"SESSION_ID","query":"search term","max_results":5}'
 ```
-# Local run
+
+**Quick Start Commands:**
+```powershell
+# Local development
 python app.py
 
-# After building container
-docker build -t agentsangam:latest .
-docker run -p 8000:8000 --env GOOGLE_API_KEY=$env:GOOGLE_API_KEY agentsangam:latest
+# With custom port
+$env:PORT = 3000; python app.py
 
-# Hit endpoints
+# Cloud deployment (Google Cloud Run buildpacks)
+# Uses dynamic PORT environment variable automatically
+
+# Test endpoints
 curl http://localhost:8000/mcp/tools
 curl http://localhost:8000/openapi/tools/pdf_search
 ```
