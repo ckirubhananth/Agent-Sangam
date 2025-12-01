@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Agent Sangam</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    input, textarea { margin: 0.5em 0; width: 100%; }
+    select { margin: 0.5em 0; width: 50%; max-width: 400px; }
+    button { margin: 0.5em 0; width: auto; padding: 0.5em 1em; font-size: 1em; }
+
+    #responseContainer { margin-top: 1em; }
+    .card {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 1em;
+      overflow: hidden;
+    }
+    .card-header {
+      background: #f0f0f0;
+      padding: 0.5em;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .card-content {
+      display: none;
+      padding: 1em;
+      background: #fff;
+    }
+    .card.active .card-content {
+      display: block;
+    }
+  </style>
+  <!-- Include a Markdown renderer (marked.js) -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <h1>📘 Agent Sangam Web App</h1>
+
+  <p style="background-color: #e8f4f8; padding: 1em; border-left: 4px solid #0277bd; margin-bottom: 1.5em;">
+    <strong>Quick Start:</strong> Upload a PDF through the below upload control, then select the specific file you uploaded in the dropdown below, and use the textbox to query your document.
+  </p>
+
+  <h3>Upload PDF Document</h3>
+  <input type="file" id="pdfInput" accept=".pdf" />
+  <button onclick="uploadPDF()">Upload</button>
+  <div id="uploadMessage" style="margin-top: 0.5em; padding: 0.5em; color: green; font-weight: bold; display: none;"></div>
+
+  <h3>Select PDF Session</h3>
+  <select id="sessionDropdown"></select>
+
+  <h3>Ask a Question</h3>
+  <textarea id="questionInput" rows="3" placeholder="Type your question here and press enter..." onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();askQuestion();}"></textarea>
+  <button onclick="askQuestion()">Ask Agent</button>
+
+  <h3>Responses</h3>
+  <div id="responseContainer">No responses yet.</div>
+
+  <script>
+    // Persistent browser-specific session ID
+    let userSessionId = localStorage.getItem("userSessionId");
+    if (!userSessionId) {
+      userSessionId = crypto.randomUUID();
+      localStorage.setItem("userSessionId", userSessionId);
+    }
+
+    let pdfSessions = [];
+
+    async function refreshSessions() {
+      const res = await fetch(`/sessions?user_session_id=${userSessionId}`);
+      pdfSessions = await res.json();
+      const dropdown = document.getElementById("sessionDropdown");
+      dropdown.innerHTML = "";
+      pdfSessions.forEach(s => {
+        const opt = document.createElement("option");
+        opt.value = s.session_id;
+        opt.textContent = `${s.pdf_name} (${s.status})`;
+        dropdown.appendChild(opt);
+      });
+    }
+
+    async function uploadPDF() {
+      const fileInput = document.getElementById('pdfInput');
+      const file = fileInput.files[0];
+      if (!file) return alert("Please select a PDF file.");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const messageDiv = document.getElementById("uploadMessage");
+      try {
+        const res = await fetch(`/upload?user_session_id=${userSessionId}`, {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+        
+        if (data.status === "accepted" && data.task_id) {
+          const taskId = data.task_id;
+          messageDiv.textContent = "⏳ Uploading and processing PDF...";
+          messageDiv.style.color = "blue";
+          messageDiv.style.display = "block";
+          fileInput.value = "";
+
+          // Poll for task completion
+          await pollTaskStatus(taskId, messageDiv);
+        } else {
+          messageDiv.textContent = "✗ Upload failed: " + data.message;
+          messageDiv.style.color = "red";
+          messageDiv.style.display = "block";
+          setTimeout(() => {
+            messageDiv.style.display = "none";
+            messageDiv.textContent = "";
+            messageDiv.style.color = "green";
+          }, 5000);
+        }
+      } catch (err) {
+        messageDiv.textContent = "✗ Error: " + err.message;
+        messageDiv.style.color = "red";
+        messageDiv.style.display = "block";
+        setTimeout(() => {
+          messageDiv.style.display = "none";
+          messageDiv.textContent = "";
+          messageDiv.style.color = "green";
+        }, 5000);
+      }
+    }
+
+    async function pollTaskStatus(taskId, messageDiv) {
+      const pollInterval = 1000; // Poll every 1 second
+      const maxAttempts = 600; // Max 10 minutes
+      let attempts = 0;
+
+      const interval = setInterval(async () => {
+        attempts++;
+        if (attempts > maxAttempts) {
+          clearInterval(interval);
+          messageDiv.textContent = "✗ Upload timeout (exceeded 10 minutes)";
+          messageDiv.style.color = "red";
+          setTimeout(() => {
+            messageDiv.style.display = "none";
+            messageDiv.textContent = "";
+            messageDiv.style.color = "green";
+          }, 5000);
+          return;
+        }
+
+        try {
+          const res = await fetch(`/task_status/${taskId}`);
+          const task = await res.json();
+
+          if (task.status === "processing") {
+            messageDiv.textContent = `⏳ Processing PDF... ${task.progress}% complete`;
+          } else if (task.status === "completed") {
+            clearInterval(interval);
+            messageDiv.textContent = "✓ PDF processed successfully!";
+            messageDiv.style.color = "green";
+            
+            // Refresh sessions dropdown
+            await refreshSessions();
+            
+            // Clear message after 5 seconds
+            setTimeout(() => {
+              messageDiv.style.display = "none";
+              messageDiv.textContent = "";
+            }, 5000);
+          } else if (task.status === "failed") {
+            clearInterval(interval);
+            messageDiv.textContent = "✗ PDF processing failed: " + (task.error || "Unknown error");
+            messageDiv.style.color = "red";
+            setTimeout(() => {
+              messageDiv.style.display = "none";
+              messageDiv.textContent = "";
+              messageDiv.style.color = "green";
+            }, 5000);
+          }
+        } catch (err) {
+          // Continue polling even if status check fails
+          console.error("Error polling task status:", err);
+        }
+      }, pollInterval);
+    }
+
+    async function askQuestion() {
+      const question = document.getElementById("questionInput").value;
+      const pdfSessionId = document.getElementById("sessionDropdown").value;
+      if (!question) return alert("Please enter a question.");
+      if (!pdfSessionId) return alert("Please select a PDF session.");
+
+      const payload = {
+        question,
+        pdf_session_id: pdfSessionId,
+        user_session_id: userSessionId
+      };
+
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+
+        // Handle error responses
+        if (data.error) {
+          alert("Error: " + data.error);
+          return;
+        }
+
+        // Handle successful responses (new format: { question, answer })
+        if (data.answer) {
+          const responseText = data.answer;
+
+          // Create collapsible card
+          const card = document.createElement("div");
+          card.className = "card";
+
+          const header = document.createElement("div");
+          header.className = "card-header";
+          header.textContent = "Q: " + question.substring(0, 50) + (question.length > 50 ? "..." : "");
+          header.onclick = () => card.classList.toggle("active");
+
+          const content = document.createElement("div");
+          content.className = "card-content";
+          content.innerHTML = "<strong>Question:</strong> " + question + "<br><br><strong>Answer:</strong><br>" + marked.parse(responseText);
+
+          card.appendChild(header);
+          card.appendChild(content);
+
+          const container = document.getElementById("responseContainer");
+          if (container.textContent === "No responses yet.") {
+            container.textContent = "";
+          }
+          container.prepend(card);
+          
+          // Clear the question input
+          document.getElementById("questionInput").value = "";
+        } else {
+          alert("No response received.");
+        }
+      } catch (err) {
+        alert("Request failed: " + err.message);
+      }
+    }
+
+    // Load sessions on page open
+    refreshSessions();
+  </script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+# Web framework
+fastapi==0.115.0
+uvicorn==0.32.0
+
+# Google ADK + GenAI
+google-adk==0.3.0
+google-genai==0.5.0
+google-generativeai==0.8.5
+
+# PDF ingestion
+PyMuPDF==1.24.9
+
+# File upload support
+python-multipart==0.0.9
+
+# Environment configuration
+python-dotenv==1.0.0
