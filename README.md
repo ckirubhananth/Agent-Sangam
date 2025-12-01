@@ -313,10 +313,10 @@ Open to extension via new tools & agents. Focus on keeping schemas stable for ex
 This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 **Key Points:**
-- ✅ Free to use, modify, and distribute
-- ✅ Commercial use permitted
-- ✅ Attribution required
-- ✅ No warranty provided
+- Free to use, modify, and distribute
+- Commercial use permitted
+- Attribution required
+- No warranty provided
 
 Copyright (c) 2025 Kirubhananth Chellam
 
@@ -329,99 +329,99 @@ Core MCP + OpenAPI + multi-agent pipeline COMPLETE. Higher-order observability &
 
 Agent Sangam demonstrates the following key concepts required for course submission:
 
-#### **Multi-Agent System** ✅ (All 4 Types Implemented)
+#### **Multi-Agent System**  (All 4 Types Implemented)
 
 **✓ Agent Powered by LLM**
 - 6 LLM-powered agents using **Google Gemini** (gemini-2.5-flash-lite)
 - Built with **Google ADK** (LlmAgent framework)
 - Agents: Ingestion, Segmenter, Summarizer, Indexer, QA, Auto-context
 
-**✓ Sequential Agents** ✅
+**✓ Sequential Agents** 
 - **Pipeline Execution**: Ingestion → Segmentation → Summarization → Indexing
 - Each agent runs sequentially during PDF processing
 - Orchestrated via `core/pipeline.py` and background tasks in `routes.py`
 
-**✓ Parallel Agents** ✅
+**✓ Parallel Agents** 
 - Multiple concurrent queries supported via async FastAPI
 - Each user can query different PDFs simultaneously
 - Background processing runs parallel to interactive queries
 
-**✓ Loop Agents** ✅
+**✓ Loop Agents** 
 - **Auto Agent** with conversational memory loops
 - **QA Agent** iterates: context retrieval → answer → store history
 - Session-based iteration with `user_histories` and `user_pdf_histories`
 
-#### **Tools** ✅ (All 5 Types Implemented)
+#### **Tools**  (All 5 Types Implemented)
 
-**✓ MCP (Model Context Protocol)** ✅
+**✓ MCP (Model Context Protocol)** 
 - Full MCP implementation (`core/mcp_server.py`)
 - 6 MCP endpoints: `/mcp/info`, `/mcp/tools`, `/mcp/tools/{name}/call`, etc.
 - Standardized tool discovery and invocation for external agents
 
-**✓ Custom Tools** ✅
+**✓ Custom Tools** 
 - 4 custom PDF tools (`tools/agent_tools.py`):
   - `PDFSearchTool` - Keyword search with context
   - `PDFEntityExtractorTool` - Named entity extraction
   - `PDFSummaryTool` - Document summarization
   - `PDFContextRetrievalTool` - Relevant context retrieval
 
-**✓ Built-in Tools** ✅
+**✓ Built-in Tools** 
 - **Google Search** (via Gemini's built-in capabilities)
 - **PDF Processing** (PyMuPDF for text extraction)
 - **Entity Extraction** (regex-based NER)
 
-**✓ OpenAPI Tools** ✅
+**✓ OpenAPI Tools** 
 - **OpenAPI 3.0 Generator** (`core/openapi_generator.py`)
 - Endpoints: `/openapi/spec`, `/openapi/tools`, `/openapi/tools/{name}`
 - Function-style schemas for LLM tool calling
 - Automatic schema generation for all tools
 
-**✓ Long-running Operations (Pause/Resume Agents)** ✅
+**✓ Long-running Operations (Pause/Resume Agents)** 
 - **Background processing** with async tasks (`BackgroundTasks`)
 - Task status tracking via `/task_status/{task_id}`
 - Non-blocking PDF ingestion pipeline
 - Progress tracking: 0% → 100%
 
-#### **Sessions & Memory** ✅ (Both Types Implemented)
+#### **Sessions & Memory**  (Both Types Implemented)
 
-**✓ Sessions & State Management** ✅
+**✓ Sessions & State Management** 
 - **InMemorySessionService** (`core/sessions.py`)
 - Per-user sessions: `user_histories`
 - Per-PDF sessions: `global_pdfs`, `user_pdf_histories`
 - Session ID generation: `create_session_name_for_pdf()`, `create_session_name_for_user()`
 
-**✓ Long-term Memory** ✅
+**✓ Long-term Memory** 
 - Conversational history stored across requests
 - PDF content indexed and persisted in `pdf_content_index`
 - Entity extraction and document summaries cached
 - 6 turns of history maintained for context
 
-#### **Context Engineering** ✅
+#### **Context Engineering** 
 - **Context Compaction**: `HISTORY_TURNS = 6` (last 6 turns retained)
 - **Relevant Context Retrieval**: `retrieve_relevant_context()` tool
 - **Token Optimization**: Only sends relevant excerpts (max 2000 chars) to LLM
 - **Prompt Engineering**: Combines document context + history + question
 - Reduces API costs by minimizing token usage
 
-#### **Observability: Logging, Tracing, Metrics** ✅
+#### **Observability: Logging, Tracing, Metrics** 
 - **Logging**: Comprehensive logging throughout (`logger.info`, `logger.error`)
 - **Tracing**: Request/response tracking in all endpoints
 - **Metrics**: Background task progress tracking (0-100%)
 - Status monitoring via `/task_status/{task_id}`
 
-#### **Agent Evaluation** ⚠️ Partial
+#### **Agent Evaluation**  Partial
 - Task status tracking (`/task_status`)
 - Tool invocation success/failure logging
 - Progress metrics for pipeline stages
 - *Note: Formal evaluation harness is roadmap item*
 
-#### **A2A Protocol (Agent-to-Agent)** ⚠️ Partial
+#### **A2A Protocol (Agent-to-Agent)**  Partial
 - MCP protocol enables agent-to-agent communication
 - External agents can discover and call tools via MCP
 - Tool registry provides dynamic discovery
 - *Note: MCP serves similar purpose to A2A protocols*
 
-#### **Agent Deployment** ✅
+#### **Agent Deployment** 
 - **Production-ready FastAPI** service
 - **Cloud deployment** configured (Google Cloud Run buildpacks)
 - **Dynamic port binding** (`PORT` environment variable)
@@ -432,16 +432,16 @@ Agent Sangam demonstrates the following key concepts required for course submiss
 
 | Requirement | Status | Implementation Details |
 |------------|--------|------------------------|
-| **Multi-agent system** | ✅ **4/4** | Sequential, Parallel, Loop, LLM-powered |
-| **Tools** | ✅ **5/5** | MCP, Custom, Built-in, OpenAPI, Long-running |
-| **Sessions & Memory** | ✅ **2/2** | InMemory sessions + Long-term storage |
-| **Context Engineering** | ✅ | Token optimization, compaction, relevant retrieval |
-| **Observability** | ✅ | Logging, tracing, metrics tracking |
-| **Agent Evaluation** | ⚠️ Partial | Status tracking implemented |
-| **A2A Protocol** | ⚠️ Partial | MCP provides equivalent functionality |
-| **Agent Deployment** | ✅ | Cloud-ready, containerized, production config |
+| **Multi-agent system** |  **4/4** | Sequential, Parallel, Loop, LLM-powered |
+| **Tools** |  **5/5** | MCP, Custom, Built-in, OpenAPI, Long-running |
+| **Sessions & Memory** |  **2/2** | InMemory sessions + Long-term storage |
+| **Context Engineering** |  | Token optimization, compaction, relevant retrieval |
+| **Observability** |  | Logging, tracing, metrics tracking |
+| **Agent Evaluation** |  Partial | Status tracking implemented |
+| **A2A Protocol** |  Partial | MCP provides equivalent functionality |
+| **Agent Deployment** |  | Cloud-ready, containerized, production config |
 
-**Total: 7/8 concepts implemented (exceeds 3/8 minimum requirement)** ✅
+**Total: 7/8 concepts implemented (exceeds 3/8 minimum requirement)** 
 
 ---
 Enjoy building with Agent Sangam.
